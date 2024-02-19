@@ -93,7 +93,7 @@ export const parseContent = (post: IPost, path?: string) => {
         references[`${path}.${index}`] = reference?.slugPath;
       });
     }
-    return null;
+    return [];
   };
 
   const parseGroup = (content = {}, path?: string) => {

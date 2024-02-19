@@ -8,6 +8,7 @@ import BadRequestError from '@server/errors/bad-request-error';
 import Post from '@server/models/post.model';
 import ContentType from '@server/models/content-type.model';
 import { flatten } from '@server/common/object';
+import hooks from '@shared/features/hooks';
 import logger from '@shared/features/logger';
 import Tag from '@server/models/tag.model';
 import { IPost, IUser } from '@shared/interfaces/model';
@@ -401,6 +402,8 @@ app.put(
 
         const flat = flatten(req?.body);
 
+        await hooks.doAction('post/preSave', post);
+
         await updateMeta(
           transactionManager,
           Post,
@@ -428,6 +431,8 @@ app.put(
       });
       throw err;
     }
+
+    await hooks.doAction('post/postSave', post);
 
     res.send(mapPostWithMeta(post));
   })
@@ -533,6 +538,7 @@ app.put(
 
           await qb.execute();
           posts = await postRepository.findByIds(ids);
+          await hooks.doAction('post/postPublish');
           return posts;
         }
       );
