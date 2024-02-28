@@ -7,7 +7,7 @@ const NotFound: React.FC<any> = () => {
     <div className="d-flex flex-column justify-content-center container text-center min-vh-100">
       <img
         src={logo}
-        alt="Burdy"
+        alt={process.env.PUBLIC_ADMIN_NAME}
         width={96}
         height={96}
         className="mb-4 mx-auto"

@@ -1,13 +1,14 @@
 import { Response } from 'express';
 import React from 'react';
-import {Connection, ConnectionOptions, EntitySchema} from 'typeorm';
+import { Connection, ConnectionOptions, EntitySchema } from 'typeorm';
 import User from '../server/models/user.model';
 import UserSession from '../server/models/user-session.model';
 import Hooks from '../shared/features/hooks';
-import SMTPTransport from "nodemailer/lib/smtp-transport";
-import {Transporter} from "nodemailer";
-import Mail from "nodemailer/lib/mailer";
-import {IPermission} from "@shared/interfaces/permissions";
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { Transporter } from 'nodemailer';
+import Mail from 'nodemailer/lib/mailer';
+import { IPermission } from '@shared/interfaces/permissions';
+import { IPost } from '@shared/interfaces/model';
 import { IDashboardLink, IDashboardSection } from '@admin/features/dashboard';
 import Post from '@server/models/post.model';
 import Asset from '@server/models/asset.model';
@@ -27,6 +28,11 @@ declare global {
       // Mail
       'mail/init': [Transporter];
       'mail/dispatched': [any];
+
+      // Post
+      'post/preSave': [IPost];
+      'post/postSave': [IPost];
+      'post/postPublish': [void];
 
       // User
       'user/postLogin': [User];
@@ -48,13 +54,13 @@ declare global {
 
       // Auth
       'auth/hasPermission': [boolean, User, Express.Request<any>];
-      'auth/permissions': [string[], User]
+      'auth/permissions': [string[], User];
       'auth/getUser': [User, Express.Request<any>];
 
       // Database
       'db/options': [ConnectionOptions];
       'db/connection': [Connection];
-      'db/models': [(Function|EntitySchema)[]];
+      'db/models': [(Function | EntitySchema)[]];
 
       // Mail
       'mail/options': [SMTPTransport.Options];
@@ -72,8 +78,8 @@ declare global {
 
     interface ISyncFilters {
       'admin/field': [React.FC<any> | null, any];
-      'dashboard/links': [IDashboardLink[]]
-      'dashboard/sections': [IDashboardSection[]]
+      'dashboard/links': [IDashboardLink[]];
+      'dashboard/sections': [IDashboardSection[]];
       [key: string]: any[];
     }
   }

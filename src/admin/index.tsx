@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom';
 import React from 'react';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import App from '@admin/app';
 import './styles/main.scss';
 import { AuthContextProvider } from '@admin/features/authentication/context/auth.context';
@@ -25,15 +26,20 @@ try {
 
 ReactDOM.render(
   <BrowserRouter basename={ROUTER_PATH}>
-    <ThemeProvider>
-      <DialogContextProvider>
-        <AuthContextProvider>
-          <SnackbarContextProvider>
-            <App />
-          </SnackbarContextProvider>
-        </AuthContextProvider>
-      </DialogContextProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <DialogContextProvider>
+          <AuthContextProvider>
+            <SnackbarContextProvider>
+              <Helmet titleTemplate={`%s - ${process.env.PUBLIC_ADMIN_NAME}`}>
+                <title>{process.env.PUBLIC_ADMIN_NAME}</title>
+              </Helmet>
+              <App />
+            </SnackbarContextProvider>
+          </AuthContextProvider>
+        </DialogContextProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   </BrowserRouter>,
   document.getElementById('root')
 );

@@ -1,5 +1,5 @@
 import { IFileDriver } from '@server/drivers/file.driver';
-import AWS from 'aws-sdk';
+import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,23 +15,23 @@ export default class AwsS3FileDriver implements IFileDriver {
   private s3: any;
 
   constructor() {
-    const options: AWS.S3.Types.ClientConfiguration = {
+    const options: S3ClientConfig = {
       region: this.region,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       },
-    }
+    };
 
     if (process.env.AWS_S3_ENDPOINT) {
-      options.endpoint = new AWS.Endpoint(process.env.AWS_S3_ENDPOINT);
+      options.endpoint = process.env.AWS_S3_ENDPOINT;
     }
 
     if (process.env.AWS_S3_FORCEPATHSTYLE) {
-      options.s3ForcePathStyle = Boolean(process.env.AWS_S3_FORCEPATHSTYLE);
+      options.forcePathStyle = Boolean(process.env.AWS_S3_FORCEPATHSTYLE);
     }
 
-    this.s3 = new AWS.S3(options);
+    this.s3 = new S3Client(options);
   }
 
   getPath = (key: string) => `${this.dir}/${key}`;

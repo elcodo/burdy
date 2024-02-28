@@ -41,6 +41,6 @@ const scriptDev = async () => {
     console.log(e);
     console.log('error occurred');
   });
-}
+};
 
 export default scriptDev;

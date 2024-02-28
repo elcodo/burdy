@@ -1,5 +1,9 @@
 import chalk from 'chalk';
-import {ConnectionOptions, createConnection, getConnectionOptions} from 'typeorm';
+import {
+  ConnectionOptions,
+  createConnection,
+  getConnectionOptions,
+} from 'typeorm';
 import { IDatabaseDriver } from '@shared/interfaces/database';
 import Hooks from '@shared/features/hooks';
 import { sqlitePatch } from '@server/drivers/sqlite-patch';
@@ -12,6 +16,7 @@ const databaseDriver: IDatabaseDriver = {
 const connectDatabaseDriver = async () => {
   try {
     const entities = await Hooks.applyFilters('db/models', []);
+    console.log(entities);
 
     const databaseType = getDatabaseType(process.env.TYPEORM_CONNECTION);
 
@@ -26,12 +31,19 @@ const connectDatabaseDriver = async () => {
       'db/options',
       defaultConnectionOptions
     );
+    console.log(connectionOptions);
 
     const typeormConnectionOptions = await getConnectionOptions();
 
-    const connection = await createConnection({...typeormConnectionOptions, ...connectionOptions} as any);
+    const connection = await createConnection({
+      ...typeormConnectionOptions,
+      ...connectionOptions,
+    } as any);
 
-    databaseDriver.connection = await Hooks.applyFilters('db/connection', connection);
+    databaseDriver.connection = await Hooks.applyFilters(
+      'db/connection',
+      connection
+    );
 
     await Hooks.doAction('db/init', connection, connectionOptions);
     console.log(chalk.green('Connection to database established.'));

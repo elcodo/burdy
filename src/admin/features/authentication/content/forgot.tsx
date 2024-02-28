@@ -12,6 +12,7 @@ import {
   Text,
 } from '@fluentui/react';
 import * as yup from 'yup';
+import { Helmet } from 'react-helmet-async';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ControlledTextField } from '@admin/components/rhf-components';
@@ -83,12 +84,13 @@ const Forgot: React.FC<any> = () => {
 
   return (
     <div className={styles.container}>
+      <Helmet title="Reset your password" />
       <div className={classNames(styles.wrapper, 'card')}>
         <img
           src={logo}
           width={36}
           height={36}
-          alt="Burdy"
+          alt={process.env.PUBLIC_ADMIN_NAME}
           className={styles.logo}
         />
         <Stack tokens={{ childrenGap: 8, padding: '0 0 16px' }}>

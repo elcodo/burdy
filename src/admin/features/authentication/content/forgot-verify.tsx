@@ -99,7 +99,7 @@ const ForgotVerify: React.FC<any> = () => {
             src={logo}
             width={36}
             height={36}
-            alt="Burdy"
+            alt={process.env.PUBLIC_ADMIN_NAME}
             className={styles.logo}
           />
           <Stack tokens={{ childrenGap: 8, padding: '0 0 16px' }}>

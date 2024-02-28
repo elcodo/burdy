@@ -6,10 +6,11 @@ import {
   MessageBarType,
   PrimaryButton,
   Stack,
-  Text
+  Text,
 } from '@fluentui/react';
 import classNames from 'classnames';
 import * as yup from 'yup';
+import { Helmet } from 'react-helmet-async';
 import { useForm } from 'react-hook-form';
 import { ControlledTextField } from '@admin/components/rhf-components';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -22,7 +23,7 @@ const useStyles = makeStyles({
     marginLeft: 'auto !important',
     marginRight: 'auto !important',
     textAlign: 'left',
-    marginBottom: '2%'
+    marginBottom: '2%',
   },
   container: {
     minHeight: '100vh',
@@ -30,39 +31,39 @@ const useStyles = makeStyles({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    background: '#faf9f8'
+    background: '#faf9f8',
   },
   card: {
-    marginBottom: '2rem'
+    marginBottom: '2rem',
   },
   actions: {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   info: {
     textAlign: 'center',
-    marginBottom: '1rem !important'
+    marginBottom: '1rem !important',
   },
   button: {
-    width: '100%'
+    width: '100%',
   },
   alert: {
     marginBottom: '1rem !important',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   logo: {
     margin: '0 auto 0.5rem 0',
-    display: 'block'
-  }
+    display: 'block',
+  },
 });
 
 const formSchema = yup.object({
   email: Validators.email(),
   password: Validators.password(),
   firstName: Validators.firstName(),
-  lastName: Validators.lastName()
+  lastName: Validators.lastName(),
 });
 
 const Welcome: React.FC<any> = () => {
@@ -74,8 +75,8 @@ const Welcome: React.FC<any> = () => {
       email: '',
       password: '',
       firstName: '',
-      lastName: ''
-    }
+      lastName: '',
+    },
   });
 
   const submit = handleSubmit((data) => {
@@ -88,19 +89,20 @@ const Welcome: React.FC<any> = () => {
 
   return (
     <div className={styles.container}>
+      <Helmet title="Welcome" />
       <div className={classNames(styles.wrapper, 'card')}>
         <img
           src={logo}
           width={36}
           height={36}
-          alt='Burdy'
+          alt={process.env.PUBLIC_ADMIN_NAME}
           className={styles.logo}
         />
         <Stack tokens={{ childrenGap: 8, padding: '0 0 16px' }}>
-          <Text variant='xLargePlus' block>
+          <Text variant="xLargePlus" block>
             Welcome
           </Text>
-          <Text variant='medium' block>
+          <Text variant="medium" block>
             Please fill out the following information to begin.
           </Text>
         </Stack>
@@ -119,10 +121,10 @@ const Welcome: React.FC<any> = () => {
               <Stack.Item style={{ flexGrow: 1 }}>
                 <ControlledTextField
                   control={control}
-                  name='firstName'
-                  type='text'
-                  label='First Name'
-                  autoComplete='off'
+                  name="firstName"
+                  type="text"
+                  label="First Name"
+                  autoComplete="off"
                   required
                   data-cy="welcome-firstName"
                 />
@@ -131,10 +133,10 @@ const Welcome: React.FC<any> = () => {
                 <ControlledTextField
                   style={{ flexGrow: 1 }}
                   control={control}
-                  name='lastName'
-                  type='text'
-                  label='Last Name'
-                  autoComplete='off'
+                  name="lastName"
+                  type="text"
+                  label="Last Name"
+                  autoComplete="off"
                   required
                   data-cy="welcome-lastName"
                 />
@@ -142,25 +144,25 @@ const Welcome: React.FC<any> = () => {
             </Stack>
             <ControlledTextField
               control={control}
-              name='email'
-              type='email'
-              label='Email'
+              name="email"
+              type="email"
+              label="Email"
               required
               data-cy="welcome-email"
             />
             <ControlledTextField
               control={control}
-              name='password'
-              type='password'
-              label='Password'
+              name="password"
+              type="password"
+              label="Password"
               canRevealPassword
               required
               data-cy="welcome-password"
             />
-            <Stack.Item align='end'>
+            <Stack.Item align="end">
               <PrimaryButton
                 className={styles.button}
-                type='submit'
+                type="submit"
                 disabled={init.loading}
                 data-cy="welcome-submit"
               >
@@ -171,8 +173,7 @@ const Welcome: React.FC<any> = () => {
         </form>
       </div>
     </div>
-  )
-    ;
+  );
 };
 
 export default Welcome;

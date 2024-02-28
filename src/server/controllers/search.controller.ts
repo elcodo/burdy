@@ -28,7 +28,10 @@ app.get(
     const compile = req?.query?.compile as string;
 
     let relationsDepth;
-    if (req?.query?.relationsDepth && !Number.isNaN(Number(req?.query?.relationsDepth))) {
+    if (
+      req?.query?.relationsDepth &&
+      !Number.isNaN(Number(req?.query?.relationsDepth))
+    ) {
       relationsDepth = Number(req?.query?.relationsDepth);
     }
 
@@ -122,7 +125,7 @@ app.get(
 
     const getMany = () => {
       qb.take(limit).skip((page - 1) * limit);
-      return qb.getMany();
+      return qb.cache(true).getMany();
     };
 
     qb.addOrderBy(
@@ -133,12 +136,16 @@ app.get(
 
     let posts;
     if (isTrue(compile)) {
-      posts = await Promise.all((results || []).map(post => compilePost(post, {
-        draft,
-        relationsDepth: relationsDepth || 1
-      })))
+      posts = await Promise.all(
+        (results || []).map((post) =>
+          compilePost(post, {
+            draft,
+            relationsDepth: relationsDepth || 1,
+          })
+        )
+      );
     } else {
-      posts = (results || []).map((post) => mapPublicPostWithMeta(post))
+      posts = (results || []).map((post) => mapPublicPostWithMeta(post));
     }
 
     res.send({
@@ -216,18 +223,15 @@ app.get(
     const getMany = () => {
       qb.take(limit).skip((page - 1) * limit);
       return qb.getMany();
-    }
+    };
 
     qb.addOrderBy(orderBy || 'tag.slugPath', order === 'DESC' ? 'DESC' : 'ASC');
-    const [count, results] = await Promise.all([
-      qb.getCount(),
-      getMany()
-    ]);
+    const [count, results] = await Promise.all([qb.getCount(), getMany()]);
     res.send({
       count,
       results: (results || []).map((tag) => mapPublicTag(tag)),
       page,
-      limit
+      limit,
     });
   })
 );

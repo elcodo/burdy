@@ -3,10 +3,7 @@ import Post from '@server/models/post.model';
 import Asset from '@server/models/asset.model';
 import BadRequestError from '@server/errors/bad-request-error';
 import { parseContent } from '@server/common/post.parser';
-import {
-  mapPublicAsset,
-  mapPublicPostWithMeta
-} from '@server/common/mappers';
+import { mapPublicAsset, mapPublicPostWithMeta } from '@server/common/mappers';
 import _ from 'lodash';
 import { IPost } from '@shared/interfaces/model';
 import Hooks from '@shared/features/hooks';
@@ -50,7 +47,10 @@ export const publishedQuery = (qb: any, draft?: boolean) => {
   }
 };
 
-export const retrievePostAndCompile = async ({ id, slugPath, versionId }: ICompilePostParams, options?: ICompilePostOptions) => {
+export const retrievePostAndCompile = async (
+  { id, slugPath, versionId }: ICompilePostParams,
+  options?: ICompilePostOptions
+) => {
   const postRepository = getRepository(Post);
   const where: any = {};
   if (slugPath) {
@@ -59,21 +59,22 @@ export const retrievePostAndCompile = async ({ id, slugPath, versionId }: ICompi
     where.id = id;
   }
 
-  const qb = await postRepository.createQueryBuilder('post')
+  const qb = await postRepository
+    .createQueryBuilder('post')
     .leftJoinAndSelect('post.meta', 'meta')
     .leftJoinAndSelect('post.author', 'author')
     .leftJoinAndSelect('post.contentType', 'contentType')
-    .leftJoinAndSelect('post.tags', 'tags')
+    .leftJoinAndSelect('post.tags', 'tags');
 
   if (slugPath) {
-    qb.where('post.slugPath = :slugPath', {slugPath});
+    qb.where('post.slugPath = :slugPath', { slugPath });
   } else if (id) {
-    qb.where('post.id = :id', {id});
+    qb.where('post.id = :id', { id });
   }
 
   publishedQuery(qb, options?.draft);
 
-  let post = await qb.getOne();
+  let post = await qb.cache(true).getOne();
 
   if (!(options?.depth > 0) && !options?.draft) {
     await Hooks.doAction('public/getPost', post);
@@ -84,8 +85,8 @@ export const retrievePostAndCompile = async ({ id, slugPath, versionId }: ICompi
       relations: ['meta', 'contentType', 'author', 'tags'],
       where: {
         id: versionId,
-        parentId: post?.id
-      }
+        parentId: post?.id,
+      },
     });
     if (!postVersion) throw new BadRequestError('invalid_post_version');
     post = postVersion;
@@ -97,12 +98,17 @@ export const retrievePostAndCompile = async ({ id, slugPath, versionId }: ICompi
   };
   if (!post) return getReturn();
 
-  return post.type === 'hierarchical_post' ? compilePostContainer(post, options) : compilePost(post, options);
+  return post.type === 'hierarchical_post'
+    ? compilePostContainer(post, options)
+    : compilePost(post, options);
 };
 
-export const compilePostContainer = async (post: IPost, options?: ICompilePostOptions) => {
+export const compilePostContainer = async (
+  post: IPost,
+  options?: ICompilePostOptions
+) => {
   const postRepository = getRepository(Post);
-  const {draft} = options;
+  const { draft } = options;
   const includeChildren = Boolean(options?.query?.includeChildren);
 
   if (!includeChildren) {
@@ -112,15 +118,16 @@ export const compilePostContainer = async (post: IPost, options?: ICompilePostOp
   const page = options?.query?.page ?? 1;
   const perPage = options?.query?.perPage ?? 10;
 
-  const childPostQuery = postRepository.createQueryBuilder('post')
+  const childPostQuery = postRepository
+    .createQueryBuilder('post')
     .leftJoinAndSelect('post.meta', 'meta')
     .leftJoinAndSelect('post.author', 'author')
     .leftJoinAndSelect('post.contentType', 'contentType')
     .leftJoinAndSelect('post.tags', 'tags');
 
   childPostQuery
-    .where('post.type = :type', {type: 'post'})
-    .andWhere('post.parentId = :parent', {parent: post.id});
+    .where('post.type = :type', { type: 'post' })
+    .andWhere('post.parentId = :parent', { parent: post.id });
 
   childPostQuery.skip(perPage * (page - 1));
   childPostQuery.take(perPage);
@@ -130,19 +137,19 @@ export const compilePostContainer = async (post: IPost, options?: ICompilePostOp
   const childCountQuery = postRepository.createQueryBuilder('post');
 
   childCountQuery
-    .where('post.type = :type', {type: 'post'})
-    .andWhere('post.parentId = :parent', {parent: post.id});
+    .where('post.type = :type', { type: 'post' })
+    .andWhere('post.parentId = :parent', { parent: post.id });
 
   publishedQuery(childCountQuery, draft);
 
   const [childPosts, count] = await Promise.all([
     childPostQuery.getMany(),
-    childCountQuery.getCount()
+    childCountQuery.getCount(),
   ]);
 
   const [postContainer, ...posts] = await Promise.all([
     compilePost(post),
-    ...childPosts.map(post => compilePost(post, options)),
+    ...childPosts.map((post) => compilePost(post, options)),
   ]);
 
   return {
@@ -154,40 +161,50 @@ export const compilePostContainer = async (post: IPost, options?: ICompilePostOp
       total: count,
     },
   };
-}
+};
 
-export const compilePost = async (post: IPost, options?: ICompilePostOptions) => {
+export const compilePost = async (
+  post: IPost,
+  options?: ICompilePostOptions
+) => {
   const assetRepository = getRepository(Asset);
-  const relationsDepth = _.isNil(options?.relationsDepth) ? MAX_RELATIONS_DEPTH : options?.relationsDepth;
+  const relationsDepth = _.isNil(options?.relationsDepth)
+    ? MAX_RELATIONS_DEPTH
+    : options?.relationsDepth;
   const depth = options?.depth || 0;
 
-  const {
-    content,
-    assets: assetsRefs,
-    references
-  } = parseContent(post);
+  const { content, assets: assetsRefs, references } = parseContent(post);
 
   const mappedPost = mapPublicPostWithMeta(post);
 
   // Inject references
-  const referencesIds = _.uniq(Object.values(references || {})).filter(slugPath => Boolean(slugPath));
+  const referencesIds = _.uniq(Object.values(references || {})).filter(
+    (slugPath) => Boolean(slugPath)
+  );
   if (referencesIds?.length > 0 && depth < relationsDepth) {
     // @ts-ignore
-    const posts = await Promise.all(referencesIds.map((slugPath: string) => {
-      return retrievePostAndCompile({ slugPath }, {
-        ...(options || {}),
-        nullable: true,
-        depth: depth + 1,
-        relationsDepth
-      });
-    }));
+    const posts = await Promise.all(
+      referencesIds.map((slugPath: string) => {
+        return retrievePostAndCompile(
+          { slugPath },
+          {
+            ...(options || {}),
+            nullable: true,
+            depth: depth + 1,
+            relationsDepth,
+          }
+        );
+      })
+    );
     const postsObj = {};
 
-    posts.filter(post => post).forEach((post: any) => {
-      postsObj[post.slugPath] = post;
-    });
+    posts
+      .filter((post) => post)
+      .forEach((post: any) => {
+        postsObj[post.slugPath] = post;
+      });
 
-    Object.keys(references).forEach(key => {
+    Object.keys(references).forEach((key) => {
       if (postsObj[references[key]]) {
         _.set(content, key, postsObj[references[key]]);
       } else {
@@ -196,23 +213,26 @@ export const compilePost = async (post: IPost, options?: ICompilePostOptions) =>
     });
   }
   // Inject assets
-  const assetsNpaths = _.uniq(Object.values(assetsRefs || {})).filter(npath => !!npath);
+  const assetsNpaths = _.uniq(Object.values(assetsRefs || {})).filter(
+    (npath) => !!npath
+  );
   if (assetsNpaths?.length > 0) {
     const assets = await assetRepository.find({
+      cache: true,
       relations: ['meta', 'tags'],
       where: {
-        npath: In(assetsNpaths)
-      }
+        npath: In(assetsNpaths),
+      },
     });
     const assetsObj = {};
-    assets.forEach(asset => {
+    assets.forEach((asset) => {
       assetsObj[asset.npath] = mapPublicAsset(asset);
     });
 
-    Object.keys(assetsRefs).forEach(key => {
+    Object.keys(assetsRefs).forEach((key) => {
       _.set(content, key, {
         ..._.get(content, key, {}),
-        ...(assetsObj?.[assetsRefs?.[key]] || {})
+        ...(assetsObj?.[assetsRefs?.[key]] || {}),
       });
     });
   }
@@ -221,8 +241,8 @@ export const compilePost = async (post: IPost, options?: ICompilePostOptions) =>
     ...mappedPost,
     meta: {
       ...mappedPost.meta,
-      content
-    }
+      content,
+    },
   };
 };
 
@@ -230,7 +250,10 @@ const escapeRegExp = (str: string) => {
   return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
 };
 
-export const buildPath = (path: string, rules: {source: string; rewrite?: string; destination?: string}[]): string | undefined => {
+export const buildPath = (
+  path: string,
+  rules: { source: string; rewrite?: string; destination?: string }[]
+): string | undefined => {
   let resultArray: RegExpExecArray | null;
   let keys: Key[] = [];
   rules = deepcopy(rules);
@@ -252,13 +275,19 @@ export const buildPath = (path: string, rules: {source: string; rewrite?: string
     params[key.name] = resultArray?.[index + 1];
   });
 
-  const rewrite = (string: string, params: Record<Key['name'], string | undefined> = {}) => {
+  const rewrite = (
+    string: string,
+    params: Record<Key['name'], string | undefined> = {}
+  ) => {
     let tmpString = string;
     Object.keys(params).forEach((key) => {
-      tmpString = tmpString.replace(new RegExp(escapeRegExp(`{${key}}`), 'g'), params[key] || '');
+      tmpString = tmpString.replace(
+        new RegExp(escapeRegExp(`{${key}}`), 'g'),
+        params[key] || ''
+      );
     });
     return tmpString;
   };
 
-  return rewrite((rule?.destination || rule?.rewrite) as string, params)
+  return rewrite((rule?.destination || rule?.rewrite) as string, params);
 };

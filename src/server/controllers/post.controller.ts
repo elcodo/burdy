@@ -138,7 +138,7 @@ app.get(
       qb.andWhere('post.parentId IS NULL');
     }
 
-    if (search?.length > 0) {
+    if (typeof search?.length === 'number' && search?.length > 0) {
       qb.andWhere(
         new Brackets((subQb) => {
           subQb
@@ -442,8 +442,15 @@ app.put(
   `/posts/publish`,
   authMiddleware(),
   asyncMiddleware(async (req, res) => {
-    const { publish, recursive, ids, publishedFrom, publishedUntil, content, saveContent } =
-      req.body;
+    const {
+      publish,
+      recursive,
+      ids,
+      publishedFrom,
+      publishedUntil,
+      content,
+      saveContent,
+    } = req.body;
     const entityManager = getManager();
     try {
       const result = await entityManager.transaction(

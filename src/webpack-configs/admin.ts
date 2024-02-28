@@ -213,7 +213,11 @@ adminDefaultWebpack.plugins.push(
     PROJECT_ADMIN_ENTRY: PathUtil.exists(PathUtil.projectRoot('admin'))
       ? JSON.stringify(PathUtil.projectRoot('admin'))
       : null,
-    ...definePublicEnv(),
+    process: {
+      env: {
+        ...definePublicEnv(),
+      },
+    },
   })
 );
 
